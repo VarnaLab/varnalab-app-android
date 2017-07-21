@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">VarnaLab Lite</string>
+    <string name="loading">Loading...</string>
+
+    <string name="who_is_online_title">Who is at VarnaLab?</string>
+</resources>
