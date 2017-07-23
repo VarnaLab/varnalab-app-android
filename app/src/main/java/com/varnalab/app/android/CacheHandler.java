@@ -57,7 +57,7 @@ class CacheHandler extends SQLiteOpenHelper {
 
         String result = null;
 
-        Log.i(TAG, "GET: " + id);
+        Log.d(TAG, "GET: " + id);
 
         Cursor cursor = db.query(TABLE_CACHE,
             new String[] { KEY_CONTENT, KEY_CREATED }, KEY_ID + "=?",
@@ -67,13 +67,13 @@ class CacheHandler extends SQLiteOpenHelper {
 
         if (cursor != null && cursor.moveToFirst()) {
             if (cursor.getInt(1) < System.currentTimeMillis() / 1000) {
-                Log.i(TAG, "   EXPIRED");
+                Log.d(TAG, "   EXPIRED");
             } else {
                 result = cursor.getString(0);
-                Log.i(TAG, "   " + result);
+                Log.d(TAG, "   " + result);
             }
         } else {
-            Log.i(TAG, "   NOT FOUND");
+            Log.d(TAG, "   NOT FOUND");
         }
 
         if (cursor != null) {
@@ -94,7 +94,7 @@ class CacheHandler extends SQLiteOpenHelper {
     void set(String id, String content, int expireAfter) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        Log.i(TAG, "SET: " + id + ": " + content);
+        Log.d(TAG, "SET: " + id + ": " + content);
 
         ContentValues values = new ContentValues();
         values.put(KEY_ID, id);
@@ -121,9 +121,9 @@ class CacheHandler extends SQLiteOpenHelper {
 
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
-            Log.i(TAG, "ALL:");
+            Log.d(TAG, "ALL:");
             do {
-                Log.i(TAG, "   " + cursor.getString(0) + ": " + cursor.getString(0) + " / " + cursor.getString(1));
+                Log.d(TAG, "   " + cursor.getString(0) + ": " + cursor.getString(0) + " / " + cursor.getString(1));
             } while (cursor.moveToNext());
         }
 
