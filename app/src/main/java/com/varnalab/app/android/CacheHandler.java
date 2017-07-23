@@ -55,6 +55,8 @@ class CacheHandler extends SQLiteOpenHelper {
     String get(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
+        String result = null;
+
         Log.i(TAG, "GET: " + id);
 
         Cursor cursor = db.query(TABLE_CACHE,
@@ -66,16 +68,19 @@ class CacheHandler extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             if (cursor.getInt(1) < System.currentTimeMillis() / 1000) {
                 Log.i(TAG, "   EXPIRED");
-                cursor.close();
-                return null;
+            } else {
+                result = cursor.getString(0);
+                Log.i(TAG, "   " + result);
             }
-            Log.i(TAG, "   " + cursor.getString(0));
-            cursor.close();
-            return cursor.getString(0);
+        } else {
+            Log.i(TAG, "   NOT FOUND");
         }
 
-        Log.i(TAG, "   NOT FOUND");
-        return null;
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        return result;
 
     }
 
@@ -98,8 +103,10 @@ class CacheHandler extends SQLiteOpenHelper {
 
         // Deleting Row (just in case)
         db.delete(TABLE_CACHE, KEY_ID + " = ?", new String[] { id });
+
         // Inserting Row
         db.insert(TABLE_CACHE, null, values);
+
         // Closing database connection
         db.close();
     }
