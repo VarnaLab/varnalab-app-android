@@ -2,9 +2,11 @@ package com.varnalab.app.android;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -86,6 +88,8 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
 
             if (userStr != null && onlineStr != null) {
                 try {
+                    Person person;
+
                     // Getting JSON Array node for users
                     JSONArray users = new JSONArray(userStr);
 
@@ -98,45 +102,26 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
                     for (int i = 0; i < users.length(); i++) {
                         JSONObject o = users.getJSONObject(i);
 
-                        String id = o.has("id") ? o.getString("id") : "";
-                        String name = o.has("name") ? o.getString("name") : "";
-                        String gravatar = o.has("gravatar") ? o.getString("gravatar") : "@drawable/ic_logo";
-                        gravatar = "@drawable/ic_logo";
+                        // create new person
+                        person = new Person(o);
 
-                        if (!online_known.toString().contains(id)) {
+                        if (!online_known.toString().contains(person.getId())) {
                            continue;
                         }
 
-                        // tmp hash map for single contact
-                        HashMap<String, String> user = new HashMap<>();
-
-                        // adding each child node to HashMap key => value
-                        user.put("id", id);
-                        user.put("name", name);
-                        user.put("gravatar", gravatar);
-
                         // adding contact to contact list
-                        userList.add(user);
+                        userList.add(person.getHashMap());
                     }
 
                     // adding unknown users
                     for (int i = 0; i < online_unknown.length(); i++) {
                         JSONObject o = online_unknown.getJSONObject(i);
 
-                        String id = o.has("id") ? o.getString("id") : "";
-                        String name = o.has("host") ? o.getString("host") : "";
-                        String gravatar = "@drawable/ic_logo";
+                        // create new person
+                        person = new Person(o);
 
-                        // tmp hash map for single contact
-                        HashMap<String, String> user = new HashMap<>();
-
-                        // adding each child node to HashMap key => value
-                        user.put("id", id);
-                        user.put("name", name);
-                        user.put("gravatar", gravatar);
-
-                        // adding contact to contact list
-                        userList.add(user);
+                        // adding person to the list
+                        userList.add(person.getHashMap());
                     }
                 } catch (final JSONException e) {
                     Log.e(TAG, "Json parsing error: " + e.getMessage());
