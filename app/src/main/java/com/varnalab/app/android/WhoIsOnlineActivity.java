@@ -77,7 +77,11 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
 
             Log.i(TAG, "Response from userStr: " + userStr);
 
-            String onlineStr = httpHandler.makeServiceCall(online_url);
+            String onlineStr = cache.get("online_data");
+            if (onlineStr == null) {
+                onlineStr = httpHandler.makeServiceCall(online_url);
+                cache.set("online_data", onlineStr, (3 * 60 * 60)); // 3 minutes
+            }
             Log.i(TAG, "Response from onlineStr: " + onlineStr);
 
             if (userStr != null && onlineStr != null) {
@@ -88,8 +92,9 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
                     // Getting JSON Object with Arrays for online
                     JSONObject online = new JSONObject(onlineStr);
                     JSONArray online_known = online.getJSONArray("known");
+                    JSONArray online_unknown = online.getJSONArray("unknown");
 
-                    // looping through All Users
+                    // looping through All Users and match for online
                     for (int i = 0; i < users.length(); i++) {
                         JSONObject o = users.getJSONObject(i);
 
@@ -101,6 +106,26 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
                         if (!online_known.toString().contains(id)) {
                            continue;
                         }
+
+                        // tmp hash map for single contact
+                        HashMap<String, String> user = new HashMap<>();
+
+                        // adding each child node to HashMap key => value
+                        user.put("id", id);
+                        user.put("name", name);
+                        user.put("gravatar", gravatar);
+
+                        // adding contact to contact list
+                        userList.add(user);
+                    }
+
+                    // adding unknown users
+                    for (int i = 0; i < online_unknown.length(); i++) {
+                        JSONObject o = online_unknown.getJSONObject(i);
+
+                        String id = o.has("id") ? o.getString("id") : "";
+                        String name = o.has("host") ? o.getString("host") : "";
+                        String gravatar = "@drawable/ic_logo";
 
                         // tmp hash map for single contact
                         HashMap<String, String> user = new HashMap<>();
@@ -151,9 +176,7 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
                 preloader.dismiss();
             }
 
-            /**
-             * Updating parsed JSON data into ListView
-             */
+            // Updating parsed JSON data into ListView
             ListAdapter adapter = new SimpleAdapter(
                 WhoIsOnlineActivity.this,
                 userList,
