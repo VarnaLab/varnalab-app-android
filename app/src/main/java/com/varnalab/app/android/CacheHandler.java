@@ -7,15 +7,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-/**
- * Created by hellmare on 20.07.2017 г..
- */
+class CacheHandler extends SQLiteOpenHelper {
 
-public class CacheHandler extends SQLiteOpenHelper {
-
-    private String TAG = CacheHandler.class.getSimpleName();
+    private final String TAG = CacheHandler.class.getSimpleName();
 
     // All Static variables
+
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
@@ -30,7 +27,7 @@ public class CacheHandler extends SQLiteOpenHelper {
     private static final String KEY_CONTENT = "content";
     private static final String KEY_CREATED = "created";
 
-    public CacheHandler(Context context) {
+    CacheHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -55,7 +52,7 @@ public class CacheHandler extends SQLiteOpenHelper {
     }
 
     // Getting cached resource
-    public String get(String id) {
+    String get(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
         Log.i(TAG, "GET: " + id);
@@ -67,12 +64,13 @@ public class CacheHandler extends SQLiteOpenHelper {
         );
 
         if (cursor != null && cursor.moveToFirst()) {
-            // If record is older than a week
-            if (cursor.getInt(1) + (60*60*24*7) < System.currentTimeMillis() / 1000) {
+            if (cursor.getInt(1) < System.currentTimeMillis() / 1000) {
                 Log.i(TAG, "   EXPIRED");
+                cursor.close();
                 return null;
             }
             Log.i(TAG, "   " + cursor.getString(0));
+            cursor.close();
             return cursor.getString(0);
         }
 
@@ -81,8 +79,14 @@ public class CacheHandler extends SQLiteOpenHelper {
 
     }
 
+    void set(String id, String content) {
+        // default = 1 week
+        int expireAfter = 7 * 24 * 60 * 60;
+        this.set(id, content, expireAfter);
+    }
+
     // Adding new cached resource
-    public void set(String id, String content) {
+    void set(String id, String content, int expireAfter) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         Log.i(TAG, "SET: " + id + ": " + content);
@@ -90,7 +94,7 @@ public class CacheHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_ID, id);
         values.put(KEY_CONTENT, content);
-        values.put(KEY_CREATED, System.currentTimeMillis() / 1000);
+        values.put(KEY_CREATED, (System.currentTimeMillis() / 1000) + expireAfter);
 
         // Deleting Row (just in case)
         db.delete(TABLE_CACHE, KEY_ID + " = ?", new String[] { id });
@@ -101,7 +105,7 @@ public class CacheHandler extends SQLiteOpenHelper {
     }
 
     // Getting all records
-    public void getAll() {
+    void getAll() {
         // Select All Query
         String selectQuery = "SELECT  * FROM " + TABLE_CACHE;
 
@@ -115,6 +119,8 @@ public class CacheHandler extends SQLiteOpenHelper {
                 Log.i(TAG, "   " + cursor.getString(0) + ": " + cursor.getString(0) + " / " + cursor.getString(1));
             } while (cursor.moveToNext());
         }
+
+        cursor.close();
 
     }
 }
