@@ -111,6 +111,15 @@ class CacheHandler extends SQLiteOpenHelper {
         db.close();
     }
 
+    void remove(String id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Log.d(TAG, "DEL: " + id);
+
+        // Deleting Row (just in case)
+        db.delete(TABLE_CACHE, KEY_ID + " = ?", new String[] { id });
+    }
+
     // Getting all records
     void getAll() {
         // Select All Query

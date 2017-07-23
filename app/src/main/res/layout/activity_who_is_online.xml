@@ -6,9 +6,27 @@
     android:layout_height="match_parent"
     tools:context="com.varnalab.app.android.WhoIsOnlineActivity">
 
-    <ListView
-        android:id="@+id/list_online"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ListView
+            android:id="@+id/list_online"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/btn_reload_online"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_margin="16dp"
+            android:clickable="true"
+            app:fabSize="normal"
+            app:srcCompat="@android:drawable/ic_menu_rotate" />
+
+    </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

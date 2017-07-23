@@ -46,6 +46,15 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.list_online);
 
         new GetOnlineList().execute();
+
+        FloatingActionButton btn_reload_online = (FloatingActionButton) findViewById(R.id.btn_reload_online);
+        btn_reload_online.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cache.remove("online_data");
+                new GetOnlineList().execute();
+            }
+        });
     }
 
     /**
@@ -69,6 +78,8 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
         protected Void doInBackground(Void... arg0) {
             HttpHandler httpHandler = new HttpHandler();
 
+            userList.clear();
+
             String userStr = cache.get("users_data");
             if (userStr == null) {
                 userStr = httpHandler.makeServiceCall(users_url);
@@ -77,14 +88,11 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
 
             cache.getAll();
 
-            Log.i(TAG, "Response from userStr: " + userStr);
-
             String onlineStr = cache.get("online_data");
             if (onlineStr == null) {
                 onlineStr = httpHandler.makeServiceCall(online_url);
                 cache.set("online_data", onlineStr, (3 * 60 * 60)); // 3 minutes
             }
-            Log.i(TAG, "Response from onlineStr: " + onlineStr);
 
             if (userStr != null && onlineStr != null) {
                 try {
