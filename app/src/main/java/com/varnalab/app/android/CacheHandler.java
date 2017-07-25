@@ -80,8 +80,10 @@ class CacheHandler extends SQLiteOpenHelper {
             cursor.close();
         }
 
-        return result;
+        // Closing database connection
+        db.close();
 
+        return result;
     }
 
     void set(String id, String content) {
@@ -118,6 +120,9 @@ class CacheHandler extends SQLiteOpenHelper {
 
         // Deleting Row (just in case)
         db.delete(TABLE_CACHE, KEY_ID + " = ?", new String[] { id });
+
+        // Closing database connection
+        db.close();
     }
 
     // Getting all records
@@ -136,7 +141,11 @@ class CacheHandler extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
 
+        // Closing cursor
         cursor.close();
 
+        // Closing database connection
+        db.close();
     }
+
 }
