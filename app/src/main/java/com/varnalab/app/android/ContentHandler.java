@@ -6,9 +6,9 @@ import android.os.AsyncTask;
 
 class ContentHandler extends AsyncTask<Void, Void, Void> {
 
-    public Context context;
-    public Content[] content;
-    public CacheHandler cache;
+    protected Context context;
+    protected Content[] content;
+    protected CacheHandler cache;
 
     private ProgressDialog preloader;
 
