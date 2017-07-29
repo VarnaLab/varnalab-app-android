@@ -7,13 +7,16 @@ android {
         applicationId "com.varnalab.app.android"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 3
-        versionName "3.0"
+        versionCode 5
+        versionName "5.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

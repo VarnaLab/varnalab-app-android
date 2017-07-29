@@ -1,5 +1,6 @@
 package com.varnalab.app.android;
 
+import android.content.Context;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,30 +18,22 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class WhoIsOnlineActivity extends AppCompatActivity {
+public class PeopleActivity extends AppCompatActivity {
 
     private CacheHandler cache = new CacheHandler(this);
 
-    private String TAG = WhoIsOnlineActivity.class.getSimpleName();
+    private String TAG = PeopleActivity.class.getSimpleName();
 
     private ListView listView;
 
     private ArrayList<HashMap<String, String>> everyoneList;
+    private ArrayList<HashMap<String, String>> backersList;
     private ArrayList<HashMap<String, String>> onlineList;
-
-    Content[] urls = new Content[]{
-        // URL to get users JSON
-        new Content("everyone_url", "https://box.outofindex.com/varnalab/whois/known"),
-        // URL to get online users JSON
-        new Content("online_known", "https://box.outofindex.com/varnalab/whois/online/known", 3 * 60 * 60),
-        // URL to get online (unknown) users JSON
-        new Content("online_unknown", "https://box.outofindex.com/varnalab/whois/online/unknown", 3 * 60 * 60)
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_who_is_online);
+        setContentView(R.layout.activity_people);
         setTitle(R.string.who_is_online_title);
 
         listView = (ListView) findViewById(R.id.list_online);
@@ -48,7 +41,7 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
         everyoneList = new ArrayList<>();
         onlineList = new ArrayList<>();
 
-        new GetContent().execute();
+        new GetContent(this).execute();
 
         FloatingActionButton btn_reload_online = (FloatingActionButton) findViewById(R.id.btn_reload_online);
         btn_reload_online.setOnClickListener(new View.OnClickListener() {
@@ -57,33 +50,33 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
                 onlineList.clear();
                 cache.remove("online_known");
                 cache.remove("online_unknown");
-                new GetContent().execute();
+                new GetContent(PeopleActivity.this).execute();
             }
         });
     }
 
-    private class GetContent extends ContentHandler {
+    private class GetContent extends PreloadHandler {
 
-        GetContent() {
-            super.context = WhoIsOnlineActivity.this;
-            super.content = WhoIsOnlineActivity.this.urls;
-            super.cache = WhoIsOnlineActivity.this.cache;
+        GetContent(Context mContext) {
+            super.mContext = mContext;
         }
 
         @Override
-        public void onPostExecute(Void result) {
-            super.onPostExecute(result);
-
+        public Void doInBackground(Void... arg0) {
             Person person;
+            ContentHandler contentHandler = new ContentHandler(mContext);
+            HashMap<String, Content> content = contentHandler.getAllContent();
 
             JSONArray everyone = null;
-            JSONArray online_known = null;
+            JSONArray backers = null;
+            JSONArray online = null;
             JSONArray online_unknown = null;
 
             try {
-                everyone = content[0].getArray();
-                online_known = content[1].getArray();
-                online_unknown = content[2].getArray();
+                everyone = content.get("everyone").getArray();
+                backers = content.get("backers").getArray();
+                online = content.get("online").getObject().getJSONArray("known");
+                online_unknown = content.get("online").getObject().getJSONArray("unknown");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -94,16 +87,16 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(getApplicationContext(),
-                            "Couldn't get json from server.",
-                            Toast.LENGTH_LONG)
-                            .show();
+                                "Couldn't get json from server.",
+                                Toast.LENGTH_LONG)
+                                .show();
                     }
                 });
-                return;
+                return null;
             }
 
             try {
-                if (online_known.length() > 0) {
+                if (online.length() > 0) {
                     // looping through everyone and add only online
                     for (int i = 0; i < everyone.length(); i++) {
                         JSONObject o = everyone.getJSONObject(i);
@@ -113,7 +106,7 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
 
                         everyoneList.add(person.getHashMap());
 
-                        if (!online_known.toString().contains(person.getId())) {
+                        if (!online.toString().contains(person.getId())) {
                             continue;
                         }
 
@@ -145,9 +138,14 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
                 });
             }
 
+            return null;
+        }
+
+        @Override
+        public void onPostExecute(Void result) {
             // Updating parsed JSON data into ListView
             ListAdapter adapter = new SimpleAdapter(
-                context,
+                mContext,
                 onlineList,
                 R.layout.list_people,
                 //new String[]{"name", "gravatar"},
@@ -157,6 +155,8 @@ public class WhoIsOnlineActivity extends AppCompatActivity {
             );
 
             listView.setAdapter(adapter);
+
+            super.onPostExecute(result);
         }
 
     }

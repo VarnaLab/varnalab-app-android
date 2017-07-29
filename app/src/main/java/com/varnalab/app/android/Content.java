@@ -2,10 +2,9 @@ package com.varnalab.app.android;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 class Content {
-
-    public String key;
 
     public String url;
 
@@ -17,13 +16,11 @@ class Content {
         //
     }
 
-    Content(String key, String url) {
-        this.key = key;
+    Content(String url) {
         this.url = url;
     }
 
-    Content(String key, String url, Integer expire) {
-        this.key = key;
+    Content(String url, Integer expire) {
         this.url = url;
         this.expire = expire;
     }
@@ -33,6 +30,13 @@ class Content {
             content = "";
         }
         return new JSONArray(content);
+    }
+
+    JSONObject getObject() throws JSONException {
+        if (content.isEmpty()) {
+            content = "";
+        }
+        return new JSONObject(content);
     }
 
 }

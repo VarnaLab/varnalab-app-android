@@ -1,80 +1,75 @@
 package com.varnalab.app.android;
 
-import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID;
-import static android.appwidget.AppWidgetManager.INVALID_APPWIDGET_ID;
-
-import android.app.IntentService;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 import android.widget.RemoteViews;
 
 
 public class WhoIsOnlineWidgetProvider extends AppWidgetProvider {
-    Context context;
+
+    public static final String UPDATE_MEETING_ACTION = "android.appwidget.action.APPWIDGET_UPDATE";
+    public static final String EXTRA_ITEM = "com.varnalab.app.android.EXTRA_ITEM";
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+
+        if (intent.getAction().equals(UPDATE_MEETING_ACTION)) {
+            Log.i("received", intent.getAction());
+            int appWidgetIds[] = appWidgetManager.getAppWidgetIds(
+                    new ComponentName(context,WhoIsOnlineWidgetProvider.class)
+            );
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list_view);
+       }
+
+        super.onReceive(context, intent);
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        // update each of the app widgets with the remote adapter
+        for (int i = 0; i < appWidgetIds.length; ++i) {
+            // Set up the intent that starts the ListViewService, which will provide the views for this collection.
+            Intent intent = new Intent(context, WhoIsOnlineRemoteService.class);
+
+            // Add the app widget ID to the intent extras.
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+
+            // Instantiate the RemoteViews object for the app widget layout.
+            RemoteViews remoteView = new RemoteViews(context.getPackageName(), R.layout.widget_who_is_online);
+
+            // Set up the RemoteViews object to use a RemoteViews adapter.
+            // This adapter connects to a RemoteViewsService  through the specified intent.
+            // This is how you populate the data.
+            remoteView.setRemoteAdapter(appWidgetIds[i], R.id.widget_list_view, intent);
+
+            // Trigger listview item click
+            Intent startActivityIntent = new Intent(context,PeopleActivity.class);
+
+            PendingIntent startActivityPendingIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    startActivityIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+            );
+
+            remoteView.setPendingIntentTemplate(R.id.widget_list_view, startActivityPendingIntent);
+
+            // The empty view is displayed when the collection has no items.
+            // It should be in the same layout used to instantiate the RemoteViews  object above.
+            remoteView.setEmptyView(R.id.widget_list_view, R.id.widget_empty_view);
+
+            // Do additional processing specific to this app widget...
+            appWidgetManager.updateAppWidget(appWidgetIds[i], remoteView);
+        }
         super.onUpdate(context, appWidgetManager, appWidgetIds);
-
-        if (appWidgetIds != null) {
-            for (int i = 0; i < appWidgetIds.length; i++) {
-                int widgetId = appWidgetIds[i];
-
-                // Inflate layout.
-                RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_who_is_online);
-
-                Intent intent = new Intent(context, UpdateWidgetService.class);
-
-                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
-                intent.setAction("FROM WIDGET PROVIDER");
-                context.startService(intent);
-            }
-
-        }
-    }
-
-    public static class UpdateWidgetService extends IntentService {
-        public UpdateWidgetService() {
-            // only for debug purpose
-            super("UpdateWidgetService");
-
-        }
-
-        @Override
-        protected void onHandleIntent(Intent intent) {
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(UpdateWidgetService.this);
-
-            int incomingAppWidgetId = intent.getIntExtra(EXTRA_APPWIDGET_ID, INVALID_APPWIDGET_ID);
-
-            if (incomingAppWidgetId != INVALID_APPWIDGET_ID) {
-                try {
-                    updateNewsAppWidget(appWidgetManager, incomingAppWidgetId, intent);
-                } catch (NullPointerException e) {
-                    //
-                }
-
-            }
-
-        }
-
-        public void updateNewsAppWidget(AppWidgetManager appWidgetManager, int appWidgetId, Intent intent) {
-            Log.v("String package name", this.getPackageName());
-            RemoteViews views = new RemoteViews(this.getPackageName(), R.layout.widget_who_is_online);
-            appWidgetManager.updateAppWidget(appWidgetId, views);
-        }
-    }
-
-    private void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        // Inflate layout.
-        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_who_is_online);
-
-        // Update UI.
-        remoteViews.setTextViewText(R.id.editText, "testing");
-        appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
     }
 
 }
